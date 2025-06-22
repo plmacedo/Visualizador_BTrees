@@ -1,37 +1,37 @@
 class BTreeNode:
-    def __init__(self, t, leaf=False):
+    def __init__(self, t, folhas=False):
         self.t = t
-        self.leaf = leaf
+        self.folhas = folhas
         self.keys = []
-        self.children = []
+        self.filhos = []
 
     def clone(self):
         """Faz uma cópia rasa da árvore, usada para animação"""
-        new_node = BTreeNode(self.t, self.leaf)
+        new_node = BTreeNode(self.t, self.folhas)
         new_node.keys = list(self.keys)
-        new_node.children = [child.clone() for child in self.children]
+        new_node.filhos = [child.clone() for child in self.filhos]
         return new_node
 
 class BTree:
     def __init__(self, t=2):
-        self.root = BTreeNode(t, True)
+        self.raiz = BTreeNode(t, True)
         self.t = t
 
-    def insert_with_trace(self, key, trace_callback):
-        root = self.root
-        if len(root.keys) == 2 * self.t - 1:
+    def insere_com_trace(self, key, trace_callback): ## realiza a inserção lidando com a raiz cheia (com rastreamento)
+        raiz = self.raiz
+        if len(raiz.keys) == 2 * self.t - 1:
             new_root = BTreeNode(self.t, False)
-            new_root.children.append(self.root)
-            self._split_child_with_trace(new_root, 0, trace_callback)
-            self.root = new_root
-            trace_callback("Nova raiz criada após split")
-            self._insert_non_full_with_trace(new_root, key, trace_callback)
+            new_root.filhos.append(self.raiz)
+            self.split_filho_com_trace(new_root, 0, trace_callback)
+            self.raiz = new_root
+            trace_callback("Nova raiz criada após split") ## captura o estado da árvore no momento e armazena para a animação visual posteriormente
+            self.insert_recursivo_com_trace(new_root, key, trace_callback)
         else:
-            self._insert_non_full_with_trace(root, key, trace_callback)
+            self.insert_recursivo_com_trace(raiz, key, trace_callback)
 
-    def _insert_non_full_with_trace(self, node, key, trace_callback):
+    def insert_recursivo_com_trace(self, node, key, trace_callback): ## inserção recursiva em nó não-cheio. (com rastreamento)
         i = len(node.keys) - 1
-        if node.leaf:
+        if node.folhas:
             node.keys.append(None)
             while i >= 0 and key < node.keys[i]:
                 node.keys[i + 1] = node.keys[i]
@@ -43,26 +43,26 @@ class BTree:
                 i -= 1
             i += 1
             trace_callback("Descendo para o filho {}".format(i))
-            if len(node.children[i].keys) == 2 * self.t - 1:
-                self._split_child_with_trace(node, i, trace_callback)
+            if len(node.filhos[i].keys) == 2 * self.t - 1:
+                self.split_filho_com_trace(node, i, trace_callback)
                 if key > node.keys[i]:
                     i += 1
-            self._insert_non_full_with_trace(node.children[i], key, trace_callback)
+            self.insert_recursivo_com_trace(node.filhos[i], key, trace_callback)
 
-    def _split_child_with_trace(self, parent, i, trace_callback):
+    def split_filho_com_trace(self, parent, i, trace_callback): ##divide nó filho cheio, promove a chave do meio ao parent e cria novo irmão a direita. (Com rastreamento)
         t = self.t
-        y = parent.children[i]
-        z = BTreeNode(t, y.leaf)
+        y = parent.filhos[i]
+        z = BTreeNode(t, y.folhas)
 
         middle_key = y.keys[t - 1]
         z.keys = y.keys[t:]
         y.keys = y.keys[:t - 1]
 
-        if not y.leaf:
-            z.children = y.children[t:]
-            y.children = y.children[:t]
+        if not y.folhas:
+            z.filhos = y.filhos[t:]
+            y.filhos = y.filhos[:t]
 
-        parent.children.insert(i + 1, z)
+        parent.filhos.insert(i + 1, z)
         parent.keys.insert(i, middle_key)
 
         trace_callback("Split no filho {}, promoveu chave {}".format(i, middle_key))

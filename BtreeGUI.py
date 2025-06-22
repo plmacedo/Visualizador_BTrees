@@ -14,7 +14,7 @@ class BTreeGUI:
         self.entry.pack(side=tk.LEFT)
         self.entry.focus()
 
-        self.insert_btn = tk.Button(master, text="Inserir", command=self.insert_key)
+        self.insert_btn = tk.Button(master, text="Inserir", command=self.inserir_chave)
         self.insert_btn.pack(side=tk.LEFT)
 
         self.status_label = tk.Label(master, text="", fg="blue")
@@ -23,7 +23,7 @@ class BTreeGUI:
         self.btree = BTree(t=2)
         self.animation_steps = []
 
-    def insert_key(self):
+    def inserir_chave(self):
         try:
             key = int(self.entry.get())
             self.entry.delete(0, tk.END)
@@ -50,21 +50,21 @@ class BTreeGUI:
         node, message = self.animation_steps[index]
         self.canvas.delete("all")
         self.status_label.config(text=message)
-        total_width = self.calculate_total_width(node)
+        total_width = self.calculo_comprimento_total(node)
         initial_x = self.canvas.winfo_width() // 2 - total_width // 2
-        self.calculate_positions(node, x=initial_x)
-        self.draw_node_recursive(node)
+        self.calcular_posicoes(node, x=initial_x)
+        self.desenho_node_recursivo(node)
         self.master.after(800, lambda: self.play_animation(index + 1))
 
-    def calculate_total_width(self, node):
+    def calculo_comprimento_total(self, node):
         if node.leaf:
             return max(40 * len(node.keys), 60)
         total = 0
         for child in node.children:
-            total += self.calculate_total_width(child) + 20
+            total += self.calculo_comprimento_total(child) + 20
         return total
 
-    def calculate_positions(self, node, depth=0, x=0):
+    def calcular_posicoes(self, node, depth=0, x=0):
         if node.leaf:
             width = max(40 * len(node.keys), 60)
             node._x = x + width // 2
@@ -73,14 +73,14 @@ class BTreeGUI:
 
         total_width = 0
         for child in node.children:
-            subtree_width = self.calculate_positions(child, depth + 1, x + total_width)
+            subtree_width = self.calcular_posicoes(child, depth + 1, x + total_width)
             total_width += subtree_width + 20
 
         node._x = x + total_width // 2
         node._y = depth * 70 + 50
         return total_width
 
-    def draw_node_recursive(self, node):
+    def desenho_node_recursivo(self, node):
         x, y = node._x, node._y
         text = " | ".join(map(str, node.keys))
         width = max(40 * len(node.keys), 60)
@@ -91,5 +91,5 @@ class BTreeGUI:
             for child in node.children:
                 cx, cy = child._x, child._y
                 self.canvas.create_line(x, y + 20, cx, cy - 20)
-                self.draw_node_recursive(child)
+                self.desenho_node_recursivo(child)
 
