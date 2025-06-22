@@ -1,4 +1,4 @@
-# Visualizador_BTrees
+# Visualizador de B-Trees
 Visualizador interativo de B-Trees em Python, com animações, utilizando a interface gráfica Tkinter.
 ## Requisitos
 -Python 3.7 ou superior
