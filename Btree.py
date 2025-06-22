@@ -1,13 +1,13 @@
 class BTreeNode:
-    def __init__(self, t, folhas=False):
+    def __init__(self, t, folha=False):
         self.t = t
-        self.folhas = folhas
+        self.folha = folha
         self.keys = []
         self.filhos = []
 
     def clone(self):
         """Faz uma cópia rasa da árvore, usada para animação"""
-        new_node = BTreeNode(self.t, self.folhas)
+        new_node = BTreeNode(self.t, self.folha)
         new_node.keys = list(self.keys)
         new_node.filhos = [child.clone() for child in self.filhos]
         return new_node
@@ -31,7 +31,7 @@ class BTree:
 
     def insert_recursivo_com_trace(self, node, key, trace_callback): ## inserção recursiva em nó não-cheio. (com rastreamento)
         i = len(node.keys) - 1
-        if node.folhas:
+        if node.folha:
             node.keys.append(None)
             while i >= 0 and key < node.keys[i]:
                 node.keys[i + 1] = node.keys[i]
@@ -52,13 +52,13 @@ class BTree:
     def split_filho_com_trace(self, parent, i, trace_callback): ##divide nó filho cheio, promove a chave do meio ao parent e cria novo irmão a direita. (Com rastreamento)
         t = self.t
         y = parent.filhos[i]
-        z = BTreeNode(t, y.folhas)
+        z = BTreeNode(t, y.folha)
 
         middle_key = y.keys[t - 1]
         z.keys = y.keys[t:]
         y.keys = y.keys[:t - 1]
 
-        if not y.folhas:
+        if not y.folha:
             z.filhos = y.filhos[t:]
             y.filhos = y.filhos[:t]
 

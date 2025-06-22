@@ -30,11 +30,11 @@ class BTreeGUI:
             self.animation_steps = []
 
             def trace_callback(message):
-                cloned_root = self.clone_tree(self.btree.root)
+                cloned_root = self.clone_tree(self.btree.raiz)
                 self.animation_steps.append((cloned_root, message))
 
             # Use a versão com rastreamento da inserção
-            self.btree.insert_with_trace(key, trace_callback)
+            self.btree.insere_com_trace(key, trace_callback)
 
             # Mostra a animação completa
             self.play_animation()
@@ -54,25 +54,25 @@ class BTreeGUI:
         initial_x = self.canvas.winfo_width() // 2 - total_width // 2
         self.calcular_posicoes(node, x=initial_x)
         self.desenho_node_recursivo(node)
-        self.master.after(800, lambda: self.play_animation(index + 1))
+        self.master.after(1000, lambda: self.play_animation(index + 1))
 
     def calculo_comprimento_total(self, node):
-        if node.leaf:
+        if node.folha:
             return max(40 * len(node.keys), 60)
         total = 0
-        for child in node.children:
+        for child in node.filhos:
             total += self.calculo_comprimento_total(child) + 20
         return total
 
     def calcular_posicoes(self, node, depth=0, x=0):
-        if node.leaf:
+        if node.folha:
             width = max(40 * len(node.keys), 60)
             node._x = x + width // 2
             node._y = depth * 70 + 50
             return width
 
         total_width = 0
-        for child in node.children:
+        for child in node.filhos:
             subtree_width = self.calcular_posicoes(child, depth + 1, x + total_width)
             total_width += subtree_width + 20
 
@@ -87,8 +87,8 @@ class BTreeGUI:
         self.canvas.create_rectangle(x - width // 2, y - 20, x + width // 2, y + 20, fill="lightblue")
         self.canvas.create_text(x, y, text=text)
 
-        if not node.leaf:
-            for child in node.children:
+        if not node.folha:
+            for child in node.filhos:
                 cx, cy = child._x, child._y
                 self.canvas.create_line(x, y + 20, cx, cy - 20)
                 self.desenho_node_recursivo(child)
