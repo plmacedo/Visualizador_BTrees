@@ -6,5 +6,5 @@ Visualizador interativo de B-Trees em Python, com animações, utilizando a inte
 -Baixe o arquivo visualizador_btree.py
 -Execute o código python
 
-ou:
+-ou:
 -Baixe e execute o arquivo visualizador_btree.exe
