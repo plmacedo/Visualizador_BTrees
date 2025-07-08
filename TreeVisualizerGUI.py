@@ -72,6 +72,9 @@ class TreeVisualizerGUI:
             self.status_label.config(text="Erro: Por favor, insira um número inteiro.", fg="red")
         except Exception as e:
             self.status_label.config(text=f"Erro inesperado: {e}", fg="red")
+            # Para debug, imprime o erro completo no console
+            import traceback
+            traceback.print_exc()
 
     def remover_chave(self):
         try:
@@ -89,6 +92,8 @@ class TreeVisualizerGUI:
             self.status_label.config(text="Erro: Por favor, insira um número inteiro.", fg="red")
         except Exception as e:
             self.status_label.config(text=f"Erro inesperado: {e}", fg="red")
+            import traceback
+            traceback.print_exc()
 
     def play_animation(self, index=0):
         if index >= len(self.animation_steps):
@@ -114,7 +119,7 @@ class TreeVisualizerGUI:
         else:
             self.disk_access_label.config(text="Acessos a Disco: 0 leituras, 0 escritas")
         
-        if not root_node or not root_node.keys:
+        if not root_node or (not root_node.keys and root_node.folha):
             canvas_width = self.canvas.winfo_width()
             canvas_height = self.canvas.winfo_height()
             self.canvas.create_text(
@@ -125,6 +130,12 @@ class TreeVisualizerGUI:
 
         self.calcular_posicoes(root_node, 0, self.canvas.winfo_width() / 2)
         self.desenho_node_recursivo(root_node, highlighted_path)
+    
+    # --- FUNÇÕES DE DESENHO CORRIGIDAS PARA SEREM GENÉRICAS ---
+
+    def _get_children(self, node):
+        """Função auxiliar para obter a lista de filhos, não importa o nome do atributo."""
+        return getattr(node, 'children', getattr(node, 'filhos', []))
 
     def get_node_width(self, node):
         text = " | ".join(map(str, node.keys))
@@ -133,13 +144,18 @@ class TreeVisualizerGUI:
     def calcular_posicoes(self, node, depth, x, parent_x=None):
         if node is None:
             return
+
         node._y = depth * self.VERTICAL_SPACING + 60
         node._x = x
+        
         if not node.folha:
-            children_widths = [self.get_subtree_width(child) for child in node.children]
-            total_width = sum(children_widths) + self.HORIZONTAL_SPACING * (len(node.children) - 1)
+            children = self._get_children(node)
+            children_widths = [self.get_subtree_width(child) for child in children]
+            total_width = sum(children_widths) + self.HORIZONTAL_SPACING * (len(children) - 1)
+            
             current_x = x - total_width / 2
-            for i, child in enumerate(node.children):
+            
+            for i, child in enumerate(children):
                 subtree_width = children_widths[i]
                 child_x = current_x + subtree_width / 2
                 self.calcular_posicoes(child, depth + 1, child_x, parent_x=node._x)
@@ -150,8 +166,11 @@ class TreeVisualizerGUI:
             return 0
         if node.folha:
             return self.get_node_width(node)
-        children_total_width = sum(self.get_subtree_width(child) for child in node.children)
-        spacing = self.HORIZONTAL_SPACING * (len(node.children) - 1)
+        
+        children = self._get_children(node)
+        children_total_width = sum(self.get_subtree_width(child) for child in children)
+        spacing = self.HORIZONTAL_SPACING * (len(children) - 1)
+        
         return max(self.get_node_width(node), children_total_width + spacing)
 
     def desenho_node_recursivo(self, node, highlighted_path=None, current_path=None):
@@ -161,7 +180,6 @@ class TreeVisualizerGUI:
         x, y = node._x, node._y
         width = self.get_node_width(node)
         
-        # Define a cor do nó (um pouco mais claro se for folha da B+)
         is_bplus_leaf = hasattr(node, 'next') and node.folha
         fill_color = self.colors['fill']
         if is_bplus_leaf:
@@ -177,13 +195,13 @@ class TreeVisualizerGUI:
         text = " | ".join(map(str, node.keys))
         self.canvas.create_text(x, y, text=text, font=("Helvetica", 10, "bold"))
         
-        # Conecta os nós folha se for uma Árvore B+
         if is_bplus_leaf and node.next and hasattr(node.next, '_x'):
             self.canvas.create_line(x + width / 2, y, node.next._x - self.get_node_width(node.next) / 2, node.next._y,
                                     arrow=tk.LAST, dash=(5, 3), fill="blue")
 
         if not node.folha:
-            for idx, child in enumerate(node.children):
+            children = self._get_children(node)
+            for idx, child in enumerate(children):
                 if hasattr(child, '_x'):
                     cx, cy = child._x, child._y
                     self.canvas.create_line(x, y + 20, cx, cy - 20, fill=outline_color, width=1.5)
